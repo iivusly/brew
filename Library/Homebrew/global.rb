@@ -3,16 +3,7 @@
 
 require_relative "startup"
 
-require "English"
-require "fileutils"
-require "json"
-require "json/add/exception"
-require "forwardable"
-
-require "extend/array"
-require "extend/blank"
-require "extend/enumerable"
-require "extend/string"
+HOMEBREW_HELP_MESSAGE = ENV.fetch("HOMEBREW_HELP_MESSAGE").freeze
 
 HOMEBREW_API_DEFAULT_DOMAIN = ENV.fetch("HOMEBREW_API_DEFAULT_DOMAIN").freeze
 HOMEBREW_BOTTLE_DEFAULT_DOMAIN = ENV.fetch("HOMEBREW_BOTTLE_DEFAULT_DOMAIN").freeze
@@ -64,11 +55,6 @@ HOMEBREW_PULL_API_REGEX =
 HOMEBREW_PULL_OR_COMMIT_URL_REGEX =
   %r[https://github\.com/([\w-]+)/([\w-]+)?/(?:pull/(\d+)|commit/[0-9a-fA-F]{4,40})]
 HOMEBREW_BOTTLES_EXTNAME_REGEX = /\.([a-z0-9_]+)\.bottle\.(?:(\d+)\.)?tar\.gz$/
-
-require "env_config"
-require "macos_version"
-require "os"
-require "messages"
 
 module Homebrew
   extend FileUtils
@@ -124,16 +110,20 @@ module Homebrew
     def auto_update_command?
       ENV.fetch("HOMEBREW_AUTO_UPDATE_COMMAND", false).present?
     end
+
+    sig { params(cmd: T.nilable(String)).void }
+    def running_command=(cmd)
+      @running_command_with_args = "#{cmd} #{ARGV.join(" ")}"
+    end
+
+    sig { returns String }
+    def running_command_with_args
+      "brew #{@running_command_with_args}".strip
+    end
   end
 end
 
-require "context"
-require "git_repository"
-require "extend/pathname"
-require "cli/args"
-
 require "PATH"
-
 ENV["HOMEBREW_PATH"] ||= ENV.fetch("PATH")
 ORIGINAL_PATHS = PATH.new(ENV.fetch("HOMEBREW_PATH")).filter_map do |p|
   Pathname.new(p).expand_path
@@ -141,9 +131,17 @@ rescue
   nil
 end.freeze
 
-require "exceptions"
-require "utils"
+require "extend/blank"
+require "extend/kernel"
+require "os"
 
-require "official_taps"
-require "tap"
+require "extend/array"
+require "extend/cachable"
+require "extend/enumerable"
+require "extend/string"
+require "extend/pathname"
+
+require "exceptions"
+
 require "tap_constants"
+require "official_taps"

@@ -14,10 +14,12 @@ require "fcntl"
 require "socket"
 require "cli/parser"
 require "dev-cmd/test"
+require "json/add/exception"
 
 TEST_TIMEOUT_SECONDS = 5 * 60
 
 begin
+  ENV.delete("HOMEBREW_FORBID_PACKAGES_FROM_PATHS")
   args = Homebrew::DevCmd::Test.new.args
   Context.current = args.context
 
@@ -34,7 +36,7 @@ begin
   formula = T.must(args.named.to_resolved_formulae.first)
   formula.extend(Homebrew::Assertions)
   formula.extend(Homebrew::FreePort)
-  if args.debug?
+  if args.debug? && !Homebrew::EnvConfig.disable_debrew?
     require "debrew"
     formula.extend(Debrew::Formula)
   end
